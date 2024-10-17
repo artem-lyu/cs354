@@ -1,31 +1,5 @@
 // PLACE YOUR FILE HEADER HERE
-////////////////////////////////////////////////////////////////////////////////
-// Main File:        p3Heap.c
-// This File:        p3Heap.c
-// Other Files:      (name of all other files if any)
-// Semester:         CS 354 Lecture 001 Fall 2023
-// Grade Group:      gg12  (See canvas.wisc.edu/groups for your gg#)
-// Instructor:       deppeler
-// 
-// Author:           Artem Lyu
-// Email:            alyu3@wisc.edu
-// CS Login:         artem
-//
-///////////////////////////  OPTIONAL WORK LOG  //////////////////////////////
-//  Document your work sessions here or on your copy http://tiny.cc/work-log
-//  Keep track of commands, structures, code that you have learned.
-//  This will help you focus your review on this from each program that
-//  are new to you. There is no need to submit work log.
-/////////////////////////// OTHER SOURCES OF HELP ////////////////////////////// 
-// Persons:          Identify persons by name, relationship to you, and email.
-//                   Describe in detail the the ideas and help they provided.
-//
-// Online sources:   avoid web searches to solve your problems, but if you do
-//                   search, be sure to include Web URLs and description of 
-//                   of any information you find.
-// 
-// AI chats:         save a transcript and submit with project.
-//////////////////////////// 80 columns wide ///////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Copyright 2020-2024 Deb Deppeler based on work by Jim Skrentny
@@ -145,75 +119,7 @@ int alloc_size;
  */
 void* alloc(int size) {     
     //TODO: Your code goes in here.
-
-	// check if size is null
-	if (size < 1) {
-		return NULL;
-	}
-	
-	// calculate block size (header + payload)
-	int block_size = ((size + sizeof(blockHeader) + 7) / 8) * 8;
-	
-
-
-	// traverse with best-fit policy	
-	blockHeader * current = heap_start;
-	blockHeader *best_fit = NULL;
-	int best_fit_size = -1;
-
-	while (current->size_status != 1) {
-		int current_size = current->size_status & ~3;
-		
-
-		// check if block is free
-		if ((current->size_status & 1) == 0) {
-			
-			// check block size
-			if (current_size >= block_size) {
-				if (best_fit == NULL || current_size < best_fit_size) {
-					// if better fit
-					best_fit = current;
-					best_fit_size = current_size;
-				}
-			}
-		}
-		// move to next block
-		current = (blockHeader*)((char *) current + current_size);
-	}
-	
-	// no fit found
-	if (best_fit == NULL) return NULL;
-
-	 int remaining_size = best_fit_size - block_size;
-
-    if (remaining_size >= (sizeof(blockHeader) + 8)) {
-        // split the block
-
-        
-        best_fit->size_status = block_size | (best_fit->size_status & 2) | 1;
-
-        blockHeader *new_free_block = (blockHeader *)((char *)best_fit + block_size);
-        new_free_block->size_status = remaining_size | 2;  // set pbit to 1
-
-        blockHeader *footer = (blockHeader *)((char *)new_free_block + remaining_size - sizeof(blockHeader));
-        footer->size_status = remaining_size;
-
-
-        blockHeader *next_block = (blockHeader *)((char *)new_free_block + remaining_size);
-        if (next_block->size_status != 1) {
-            next_block->size_status &= ~2;
-        }
-    } else {
-        //  allocate entire block
-        best_fit->size_status = best_fit_size | (best_fit->size_status & 2) | 1;
-
-        blockHeader *next_block = (blockHeader *)((char *)best_fit + best_fit_size);
-        if (next_block->size_status != 1) {
-            next_block->size_status |= 2;  // p-bit since previous block is allocated
-        }
-    }
-
-    return (void*)((char*)best_fit+sizeof(blockHeader));
+    return NULL;
 } 
 
 /* 
@@ -238,94 +144,7 @@ void* alloc(int size) {
  */                    
 int free_block(void *ptr) {    
     //TODO: Your code goes in here.
-
-	// ptr is not null
-	if (ptr == NULL) {
-		return -1;
-	}
-	
-	// ptr is multiple of 8
-	if ((unsigned long) ptr % 8 != 0) {
-		return -1;
-	}
-	
-	// ptr in heap
-	blockHeader * block_to_free = (blockHeader*)((char*)ptr - sizeof(blockHeader));
-	if ((char*)block_to_free < (char*)heap_start || (char*)block_to_free >= (char*)heap_start + alloc_size) {
-		return -1;
-	}
-
-	// check if alr free
-	if ((block_to_free->size_status & 1) == 0) {
-		return -1;
-	}
-	
-	// mark status as free
-	block_to_free->size_status &= ~1;
-	// block size
-	int block_size = block_to_free->size_status & ~3;
-
-	// next and prev block
-    blockHeader *next_block = (blockHeader *)((char *)block_to_free + block_size);
-    blockHeader *prev_block = NULL;
-
-
-    if (next_block->size_status != 1 && (next_block->size_status & 1) == 0) {
-        // next block is free
-        int next_block_size = next_block->size_status & ~3;
-        block_size += next_block_size;
-
-        // update header
-        block_to_free->size_status = block_size | (block_to_free->size_status & 2);
-
-        // update footer
-        blockHeader *footer = (blockHeader *)((char *)block_to_free + block_size - sizeof(blockHeader));
-        footer->size_status = block_size;
-
-        // update next pointer
-        next_block = (blockHeader *)((char *)block_to_free + block_size);
-
-    }
-
-    
-    if ((block_to_free->size_status & 2) == 0) {
-        // previous block is free
-        blockHeader *prev_footer = (blockHeader *)((char *)block_to_free - sizeof(blockHeader));
-        int prev_block_size = prev_footer->size_status;
-
-        // calculate start
-        prev_block = (blockHeader *)((char *)block_to_free - prev_block_size);
-
-        // update size
-        block_size += prev_block_size;
-
-        // update header
-        prev_block->size_status = block_size | (prev_block->size_status & 2);
-
-        // update footer
-        blockHeader *footer = (blockHeader *)((char *)prev_block + block_size - sizeof(blockHeader));
-        footer->size_status = block_size;
-
-        // update to free
-        block_to_free = prev_block;
-
-    } else {
-        blockHeader *footer = (blockHeader *)((char *)block_to_free + block_size - sizeof(blockHeader));
-        footer->size_status = block_size;
-    }
-
-    // update p bit
-    if (next_block->size_status != 1) {
-        if ((block_to_free->size_status & 1) == 0) {
-            
-            next_block->size_status &= ~2;  
-        } else {
-            // prev block is allocated
-            next_block->size_status |= 2;
-        }
-    }
-	
-    return 0;
+    return -1;
 } 
 
 
