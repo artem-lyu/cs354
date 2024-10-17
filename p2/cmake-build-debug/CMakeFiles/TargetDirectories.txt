@@ -1,0 +1,3 @@
+C:/Users/Artem/Desktop/cs354/p2/cmake-build-debug/CMakeFiles/p2.dir
+C:/Users/Artem/Desktop/cs354/p2/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Artem/Desktop/cs354/p2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,4 @@
+# ninja log v6
+12	127	7497916829561043	CMakeFiles/p2.dir/check_sudoku_board.c.obj	64c8c55231fadc0c
+1	188	7497916829451040	CMakeFiles/p2.dir/main.cpp.obj	ef80e8a21d681977
+12	120	7497947293935828	CMakeFiles/p2.dir/my_magic_square.c.obj	e4b3d7b6f15c091c
